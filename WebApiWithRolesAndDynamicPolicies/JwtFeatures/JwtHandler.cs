@@ -1,10 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using WebApiWithRolesAmdDynamicPolicies.Entities;
 
-namespace WebApiWithRoles.JwtFeatures;
+namespace WebApiWithRolesAmdDynamicPolicies.JwtFeatures;
 
 public class JwtHandler(IConfiguration configuration)
 {
@@ -16,7 +16,7 @@ public class JwtHandler(IConfiguration configuration)
 
     #region Public methods declaration
 
-    public string GenerateToken(IdentityUser user, List<string> roles)
+    public string GenerateToken(ApplicationUser user, List<string> roles)
     {
         var signingCredentials = GetSigningCredentials();
         var claims = GetClaims(user, roles);
@@ -28,6 +28,18 @@ public class JwtHandler(IConfiguration configuration)
 
     #region Private methods declaration
 
+    private static List<Claim> GetClaims(ApplicationUser user, List<string> roles)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Email, user.Email!),
+            new(ClaimTypes.NameIdentifier, user.Id)
+        };
+
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        return claims;
+    }
+
     private JwtSecurityToken GenerateJwtSecurityToken(SigningCredentials signingCredentials, List<Claim> claims)
     {
         return new JwtSecurityToken(
@@ -37,16 +49,6 @@ public class JwtHandler(IConfiguration configuration)
             audience: m_JwtSettings.GetRequiredSection("ValidAudience").Value,
             signingCredentials: signingCredentials
         );
-    }
-
-    private static List<Claim> GetClaims(IdentityUser user, List<string> roles)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Name, user.Email!),
-        };
-        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-        return claims;
     }
 
     private SigningCredentials GetSigningCredentials()

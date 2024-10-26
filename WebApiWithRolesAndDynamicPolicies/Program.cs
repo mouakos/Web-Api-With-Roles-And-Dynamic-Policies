@@ -1,15 +1,18 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using WebApiWithRoles.ActionsFilters;
-using WebApiWithRoles.Data;
-using WebApiWithRoles.ExceptionHandling;
-using WebApiWithRoles.Interfaces;
-using WebApiWithRoles.JwtFeatures;
-using WebApiWithRoles.Services;
+using WebApiWithRolesAmdDynamicPolicies.ActionsFilters;
+using WebApiWithRolesAmdDynamicPolicies.Authorization;
+using WebApiWithRolesAmdDynamicPolicies.Data;
+using WebApiWithRolesAmdDynamicPolicies.Entities;
+using WebApiWithRolesAmdDynamicPolicies.ExceptionHandling;
+using WebApiWithRolesAmdDynamicPolicies.Interfaces;
+using WebApiWithRolesAmdDynamicPolicies.JwtFeatures;
+using WebApiWithRolesAmdDynamicPolicies.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,13 +39,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
                       throw new InvalidOperationException("Sorry, your connection is not found"));
 });
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.Password.RequiredLength = 6;
         options.Password.RequireNonAlphanumeric = false;
         options.Password.RequireDigit = false;
         options.Password.RequireUppercase = false;
         options.Password.RequireLowercase = false;
+        options.User.RequireUniqueEmail = true;
+        options.SignIn.RequireConfirmedAccount = false;
+        options.SignIn.RequireConfirmedEmail = false;
+        options.SignIn.RequireConfirmedPhoneNumber = false;
     })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
@@ -74,9 +81,12 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("VisitorPolicy", policy => policy.RequireRole("Visitor"));
+    options.AddPolicy("UserPolicy", policy => policy.RequireRole("User"));
 });
 
+builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, DynamicPolicyProvider>();
+builder.Services.AddSingleton<IAuthorizationHandler, DynamicRoleHandler>();
 
 var app = builder.Build();
 

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace WebApiWithRoles.ActionsFilters;
+namespace WebApiWithRolesAmdDynamicPolicies.ActionsFilters;
 
 public class ModelValidationFilterAttribute : IActionFilter
 {

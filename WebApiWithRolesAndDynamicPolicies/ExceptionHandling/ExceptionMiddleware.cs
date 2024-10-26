@@ -1,9 +1,11 @@
 ﻿using System.Net;
 
-namespace WebApiWithRoles.ExceptionHandling;
+namespace WebApiWithRolesAmdDynamicPolicies.ExceptionHandling;
 
 public class ExceptionMiddleware(RequestDelegate requestDelegate)
 {
+    #region Public methods declaration
+
     public async Task InvokeAsync(HttpContext httpContext)
     {
         try
@@ -17,6 +19,10 @@ public class ExceptionMiddleware(RequestDelegate requestDelegate)
         }
     }
 
+    #endregion
+
+    #region Private methods declaration
+
     private static async Task HandleExceptionAsync(HttpContext httpContext)
     {
         httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -25,7 +31,9 @@ public class ExceptionMiddleware(RequestDelegate requestDelegate)
         await httpContext.Response.WriteAsync(new ErrorDetails
         {
             StatusCode = httpContext.Response.StatusCode,
-            Message = "Internal server error",
+            Message = "Internal server error."
         }.ToString());
     }
+
+    #endregion
 }

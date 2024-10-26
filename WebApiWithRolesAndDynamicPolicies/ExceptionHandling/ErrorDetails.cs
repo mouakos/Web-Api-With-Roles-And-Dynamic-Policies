@@ -1,16 +1,23 @@
 ﻿using System.Text.Json;
 
-namespace WebApiWithRoles.ExceptionHandling
-{
-    internal class ErrorDetails
-    {
-        public int StatusCode { get; set; }
-        public string? Message { get; set; }
+namespace WebApiWithRolesAmdDynamicPolicies.ExceptionHandling;
 
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return JsonSerializer.Serialize(this);
-        }
+internal class ErrorDetails
+{
+    #region Public properties declaration
+
+    public string? Message { get; set; }
+    public int StatusCode { get; set; }
+
+    #endregion
+
+    #region Public methods declaration
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return JsonSerializer.Serialize(this);
     }
+
+    #endregion
 }

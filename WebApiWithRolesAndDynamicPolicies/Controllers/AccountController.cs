@@ -1,67 +1,39 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using WebApiWithRoles.ActionsFilters;
-using WebApiWithRoles.DTO;
-using WebApiWithRoles.DTO.Responses;
-using WebApiWithRoles.Interfaces;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using WebApiWithRolesAmdDynamicPolicies.ActionsFilters;
+using WebApiWithRolesAmdDynamicPolicies.DTO.Requests;
+using WebApiWithRolesAmdDynamicPolicies.Interfaces;
 
-namespace WebApiWithRoles.Controllers;
+namespace WebApiWithRolesAmdDynamicPolicies.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AccountController(IAccountService accountService) : ControllerBase
+public class AccountController(
+    IAccountService accountService) : ControllerBase
 {
     #region Public methods declaration
 
-    [HttpPost("add-role")]
-    [ProducesResponseType<GeneralResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<GeneralResponse>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> AddRole([FromBody] string role)
-    {
-        if (string.IsNullOrWhiteSpace(role)) return BadRequest("Invalid role");
-        var result = await accountService.AddRoleAsync(role);
-
-        if (result.IsSuccess)
-            return Ok(result);
-        return BadRequest(result);
-    }
-
-    [HttpPost("assign-role")]
-    [ServiceFilter(typeof(ModelValidationFilterAttribute))]
-    [ProducesResponseType<GeneralResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<GeneralResponse>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> AssignRole([FromBody] UserRoleDto model)
-    {
-        var result = await accountService.AssignRoleAsync(model);
-
-        if (result.IsSuccess)
-            return Ok(result);
-        return BadRequest(result);
-    }
-
     [HttpPost("login")]
     [ServiceFilter(typeof(ModelValidationFilterAttribute))]
-    [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<LoginResponse>(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Login([FromBody] LoginDto model)
+    [AllowAnonymous]
+    public async Task<IActionResult> Login([FromBody] LoginRequest model)
     {
-        var result = await accountService.AuthenticateAsync(model);
+        var result = await accountService.LoginAsync(model);
 
-        if (result.IsSuccess)
-            return Ok(result);
-        return Unauthorized(result);
+        if (result.Succeeded)
+            return Ok(new { result.Token });
+        return Unauthorized(result.Errors);
     }
 
     [HttpPost("register")]
     [ServiceFilter(typeof(ModelValidationFilterAttribute))]
-    [ProducesResponseType<GeneralResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<GeneralResponse>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Register([FromBody] RegisterDto model)
+    public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest model)
     {
         var result = await accountService.RegisterAsync(model);
 
-        if (result.IsSuccess)
-            return Ok(result);
-        return BadRequest(result);
+        if (result.Succeeded)
+            return Ok(new { message = $"User {model.Email} registered successfully." });
+        return BadRequest(result.Errors);
     }
 
     #endregion

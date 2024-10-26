@@ -25,7 +25,9 @@
 
   <ItemGroup>
     <Folder Include="Data\" />
+    <Folder Include="Data\Migrations\" />
     <Folder Include="JwtFeatures\" />
+    <Folder Include="Entities\" />
   </ItemGroup>
 
 </Project>
